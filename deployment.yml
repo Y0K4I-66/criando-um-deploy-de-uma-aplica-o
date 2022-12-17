@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-dados
+spec:
+  accessModes:
+     - ReadWriteOnce
+    resources:
+     request:
+      storage: 10Gi
+  storageClassName: standard-rwo
+---
+apiVesion: apps/v1
+kind: Deployment
+metadata:
+ name: mysql
+spec:
+  selector:
+   matchLabels:
+     app: mysql
+  template:
+    metadadata:
+      labes:
+      app: mysql
+    spec:
+     containers:
+     -image: williancms/projeto-database:1.0
+      args:
+      - "--ignore-db-dir=lost+found "
+      imagePullPolicy: Always
+      name: mysql
+      ports:
+      - containers: 3306
+        name: mysql 
+
+      volumeMounts:
+     - name: mysql-dados
+       mountPath: /var/lib/mysql/
+    volumes:
+    - name: mysql-dados
+      persistentVolumeClaim:
+       claimName: mysql-dados
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  labels:
+   app: php
+spec:
+  replicas: 6
+  selector:
+    matchlabels:
+     app: php
+  template:
+    metadata:
+     labesls:
+       app: php
+   specs:
+    containers:
+    - name: php
+      image: williancms/projeto-beckend:1.0
+      imagePullPolicy: Always
+      ports:
+      - containerPort: 80
